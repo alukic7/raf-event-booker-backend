@@ -1,5 +1,5 @@
 {
-  "name": "raf-event-booker-backend",
+  "name": "backend-template",
   "module": "index.ts",
   "type": "module",
   "private": true,

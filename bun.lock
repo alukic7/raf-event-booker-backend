@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "raf-event-booker-backend",
+      "name": "backend-template",
       "dependencies": {
         "axios": "^1.11.0",
         "express": "^5.1.0",
