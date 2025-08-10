@@ -20,6 +20,7 @@
 
     // Best practices
     "strict": true,
+    "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,

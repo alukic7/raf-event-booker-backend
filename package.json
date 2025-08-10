@@ -1,5 +1,5 @@
 {
-  "name": "backend-template",
+  "name": "raf-event-booker-backend",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -9,14 +9,20 @@
     "dpl": "git add . && git commit -m 'deploy' && git push -u origin main"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bun": "latest",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/cookie-parser": "^1.4.9",
     "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
