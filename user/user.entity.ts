@@ -16,10 +16,10 @@ export class User {
   @Column({ nullable: false, length: 255 })
   password: string
 
-  @Column({ nullable: false, length: 100 })
+  @Column({ name: 'first_name', nullable: false, length: 100 })
   firstName: string
 
-  @Column({ nullable: false, length: 100 })
+  @Column({ name: 'last_name', nullable: false, length: 100 })
   lastName: string
 
   @Column({

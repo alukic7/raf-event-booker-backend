@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +14,7 @@ export class Session {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
+  @Index('idx_sessions_user_id')
   @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: User

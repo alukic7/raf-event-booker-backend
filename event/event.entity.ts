@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -32,15 +33,17 @@ export class Event {
   })
   createdAt: Date
 
+  @Index('idx_events_event_date')
   @Column({ type: 'timestamptz', nullable: false, name: 'event_date' })
   eventDate: Date
 
   @Column({ nullable: false, length: 255 })
   location: string
 
-  @Column({ default: 0 })
+  @Column({ nullable: false, default: 0 })
   views: number
 
+  @Index('idx_events_author_id')
   @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'author_id' })
   author: User
@@ -53,10 +56,11 @@ export class Event {
   })
   tags: Tag[]
 
+  @Index('idx_events_category_id')
   @ManyToOne(() => Category, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'category_id' })
   category: Category
 
-  @Column({ nullable: true, name: 'max_participants' })
-  maxParticipants: number
+  @Column({ type: 'int', nullable: true, name: 'max_participants' })
+  maxParticipants: number | null
 }
