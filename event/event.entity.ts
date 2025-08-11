@@ -15,6 +15,7 @@ import { Tag } from '../tag/tag.entity'
 import { User } from '../user/user.entity'
 
 @Check(`"max_participants" IS NULL OR "max_participants" > 0`)
+@Check(`"views" >= 0`)
 @Entity('events')
 export class Event {
   @PrimaryGeneratedColumn()
@@ -40,7 +41,7 @@ export class Event {
   @Column({ nullable: false, length: 255 })
   location: string
 
-  @Column({ nullable: false, default: 0 })
+  @Column({ nullable: false, type: 'int', default: 0 })
   views: number
 
   @Index('idx_events_author_id')

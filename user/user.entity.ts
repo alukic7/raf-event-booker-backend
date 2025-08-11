@@ -3,8 +3,8 @@ import type { UserStatus, UserType } from './user.types'
 
 @Check(`char_length("password") >= 8`)
 @Check(`char_length("email") > 0`)
-@Check(`char_length("firstName") > 0`)
-@Check(`char_length("lastName") > 0`)
+@Check(`char_length("first_name") > 0`)
+@Check(`char_length("last_name") > 0`)
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
