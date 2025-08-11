@@ -17,9 +17,13 @@ export class Session {
   @JoinColumn({ name: 'user_id' })
   user: User
 
-  @CreateDateColumn({ name: 'created_at', nullable: false })
+  @CreateDateColumn({
+    name: 'created_at',
+    nullable: false,
+    type: 'timestamptz',
+  })
   createdAt: Date
 
-  @Column({ name: 'is_valid', type: 'boolean', default: true, nullable: false })
+  @Column({ name: 'is_valid', default: true, nullable: false })
   isValid: boolean
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "bun index.ts",
     "dev": "bun --watch index.ts",
-    "dpl": "git add . && git commit -m 'deploy' && git push -u origin main"
+    "dpl": "git add . && git commit -m 'auto' && git push -u origin main"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
