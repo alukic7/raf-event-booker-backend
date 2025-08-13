@@ -2,7 +2,10 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
 import { authRouter } from './auth/auth.controller'
+import { categoryRouter } from './category/category.controller'
+import { commentsRouter } from './comment/comments.controller'
 import { AppDataSource } from './config/data-source'
+import { eventRouter } from './event/event.controller'
 import { createAdmin } from './lib/init'
 import { userRouter } from './user/user.controller'
 
@@ -21,8 +24,12 @@ app.use(
 app.use(cookieParser())
 app.use(express.json())
 
+// Routes
 app.use('/auth', authRouter)
 app.use('/users', userRouter)
+app.use('/categories', categoryRouter)
+app.use('/events/comments', commentsRouter)
+app.use('/events', eventRouter)
 
 AppDataSource.initialize()
   .then(async () => {

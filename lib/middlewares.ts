@@ -1,12 +1,27 @@
 import type { NextFunction, Request, Response } from 'express'
 import { AppDataSource } from '../config/data-source'
+import { Session } from '../session/session.entity'
 import { makeError } from './errors'
 import { handleError } from './http'
+
+export async function getUserIdFromCookie(req: Request) {
+  const sessionRepo = AppDataSource.getRepository(Session)
+
+  const sessionId = req.cookies.sessionId
+  if (!sessionId) throw makeError('AuthError', 401, 'Unauthorized access')
+
+  const session = await sessionRepo.findOne({
+    where: { id: sessionId },
+    relations: { user: true },
+  })
+  if (!session) throw makeError('AuthError', 401, 'Invalid session')
+
+  return session.user.id
+}
 
 export async function isAdmin(req: Request, res: Response, next: NextFunction) {
   try {
     const sessionId = req.cookies.sessionId
-
     if (!sessionId) throw makeError('AuthError', 401, 'Unauthorized access')
 
     const sessionRepo = AppDataSource.getRepository('Session')

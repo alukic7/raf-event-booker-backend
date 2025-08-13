@@ -58,7 +58,7 @@ export class Event {
   tags: Tag[]
 
   @Index('idx_events_category_id')
-  @ManyToOne(() => Category, { nullable: false, onDelete: 'CASCADE' })
+  @ManyToOne(() => Category, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'category_id' })
   category: Category
 
