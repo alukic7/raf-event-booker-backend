@@ -176,48 +176,52 @@ export class UserService {
         lastName: updatedUser.lastName,
         type: updatedUser.type,
       }
-    } catch (err: any) {
+    } catch (e: any) {
+      if (e.code === '23505')
+        throw makeError('UserError', 409, 'Email already in use')
       throw makeError('UserError', 500, 'Failed to update user')
     }
   }
 
   async deactivateUserById(id: number): Promise<void> {
-    const user = await this.userRepo.findOneBy({ id })
+    if (!Number.isFinite(id) || id <= 0) {
+      throw makeError('UserError', 400, 'Invalid user id')
+    }
 
-    if (user && user.type === 'admin')
-      throw makeError(
-        'UserError',
-        403,
-        'You cannot deactivate an admin user account'
-      )
+    await AppDataSource.transaction(async m => {
+      const res = await m
+        .createQueryBuilder()
+        .update(User)
+        .set({ status: 'inactive' })
+        .where('id = :id', { id })
+        .andWhere('type <> :admin', { admin: 'admin' })
+        .andWhere('status <> :inactive', { inactive: 'inactive' })
+        .execute()
 
-    const result = await this.userRepo.update(id, { status: 'inactive' })
-
-    if (result.affected === 0)
-      throw makeError(
-        'UserError',
-        404,
-        `Failed to deactivate user. There is no such user with id ${id}`
-      )
+      if (res.affected === 0) {
+        throw makeError('UserError', 404, `Cannot deactivate user ${id}`)
+      }
+    })
   }
 
   async activateUserById(id: number): Promise<void> {
-    const user = await this.userRepo.findOneBy({ id })
+    if (!Number.isFinite(id) || id <= 0) {
+      throw makeError('UserError', 400, 'Invalid user id')
+    }
 
-    if (user && user.type === 'admin')
-      throw makeError(
-        'UserError',
-        403,
-        'You cannot activate an admin user account'
-      )
+    await AppDataSource.transaction(async m => {
+      const res = await m
+        .createQueryBuilder()
+        .update(User)
+        .set({ status: 'active' })
+        .where('id = :id', { id })
+        .andWhere('type <> :admin', { admin: 'admin' })
+        .andWhere('status <> :active', { active: 'active' })
+        .execute()
 
-    const result = await this.userRepo.update(id, { status: 'active' })
-
-    if (result.affected === 0)
-      throw makeError(
-        'UserError',
-        404,
-        `Failed to activate user. There is no such user with id ${id}`
-      )
+      if (res.affected === 0) {
+        throw makeError('UserError', 404, `Cannot activate user ${id}`)
+      }
+    })
   }
 }
