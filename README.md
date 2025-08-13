@@ -1,1 +1,1 @@
-### Backend for the university event booking app 👨‍🎓
+# Backend for the university event booking app 👨‍🎓
