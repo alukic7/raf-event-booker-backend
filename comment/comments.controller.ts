@@ -11,8 +11,15 @@ const userService = new UserService()
 // Get all comments for an event
 router.get('/:eventId', async (req, res) => {
   const eventId = Number(req.params.eventId)
+  const pageSize = Number(req.query.pageSize)
+  const offset = Number(req.query.offset)
+
   try {
-    const comments = await commentsService.getAllComments(eventId)
+    const comments = await commentsService.getAllComments(
+      eventId,
+      pageSize,
+      offset
+    )
     res.status(200).json(comments)
   } catch (err: unknown) {
     handleError(res, err)

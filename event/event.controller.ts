@@ -11,8 +11,11 @@ router.use(isAuthorized)
 
 // Get all events
 router.get('/', async (req, res) => {
+  const pageSize = Number(req.query.pageSize)
+  const offset = Number(req.query.offset)
+
   try {
-    const events: Event[] = await eventService.getAllEvents()
+    const events: Event[] = await eventService.getAllEvents(pageSize, offset)
     res.status(200).json(events)
   } catch (err: unknown) {
     handleError(res, err)

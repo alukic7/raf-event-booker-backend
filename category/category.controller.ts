@@ -10,8 +10,11 @@ router.use(isAuthorized)
 
 // Get all categories
 router.get('/', async (req, res) => {
+  const pageSize = Number(req.query.pageSize)
+  const offset = Number(req.query.offset)
+
   try {
-    const categories = await categoryService.getAllCategories()
+    const categories = await categoryService.getAllCategories(pageSize, offset)
     res.status(200).json(categories)
   } catch (err: unknown) {
     handleError(res, err)

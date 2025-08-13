@@ -7,13 +7,46 @@ export class CommentsService {
   commentsRepo = AppDataSource.getRepository(Comment)
   eventRepo = AppDataSource.getRepository(Event)
 
-  async getAllComments(eventId: number): Promise<Comment[]> {
-    if (!eventId) throw new Error('Event ID is required to retrieve comments')
+  async getAllComments(
+    eventId: number,
+    pageSize: number,
+    offset: number
+  ): Promise<{ data: Comment[]; total: number; page: number; pages: number }> {
+    const allowedSizes = [10, 25, 50]
 
-    return this.commentsRepo.find({
+    if (
+      !Number.isFinite(eventId) ||
+      !Number.isFinite(pageSize) ||
+      !Number.isFinite(offset)
+    ) {
+      throw makeError(
+        'CommentError',
+        400,
+        'Event id, page size and offset are required'
+      )
+    }
+
+    if (eventId < 1) {
+      throw makeError('CommentError', 400, 'Event id must be a positive number')
+    }
+
+    if (!allowedSizes.includes(pageSize)) {
+      throw makeError('CommentError', 400, 'This page size is not allowed')
+    }
+
+    const skip = Math.max(0, offset)
+
+    const [comments, total] = await this.commentsRepo.findAndCount({
       where: { event: { id: eventId } },
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'DESC', id: 'DESC' },
+      take: pageSize,
+      skip: skip,
     })
+
+    const page = Math.floor(skip / pageSize) + 1
+    const pages = Math.max(1, Math.ceil(total / pageSize))
+
+    return { data: comments, total, page, pages }
   }
 
   async createComment(authorName: string, content: string, eventId: number) {

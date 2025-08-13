@@ -5,9 +5,32 @@ import { Category } from './category.entity'
 export class CategoryService {
   categoryRepository = AppDataSource.getRepository(Category)
 
-  async getAllCategories(): Promise<Category[]> {
-    const categories: Category[] = await this.categoryRepository.find()
-    return categories
+  async getAllCategories(
+    pageSize: number,
+    offset: number
+  ): Promise<{ data: Category[]; total: number; page: number; pages: number }> {
+    const allowedSizes = [10, 25, 50]
+
+    if (!Number.isFinite(pageSize) || !Number.isFinite(offset)) {
+      throw makeError('CategoryError', 400, 'Page size and offset are required')
+    }
+
+    if (!allowedSizes.includes(pageSize)) {
+      throw makeError('CategoryError', 400, 'This page size is not allowed')
+    }
+
+    const skip = Math.max(0, offset)
+
+    const [categories, total] = await this.categoryRepository.findAndCount({
+      order: { name: 'ASC' },
+      take: pageSize,
+      skip: skip,
+    })
+
+    const page = Math.floor(skip / pageSize) + 1
+    const pages = Math.max(1, Math.ceil(total / pageSize))
+
+    return { data: categories, total, page, pages }
   }
 
   async addCategory(name: string, description: string) {

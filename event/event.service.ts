@@ -8,11 +8,33 @@ import { Event } from './event.entity'
 export class EventService {
   eventRepository = AppDataSource.getRepository(Event)
 
-  async getAllEvents(): Promise<Event[]> {
-    return this.eventRepository.find({
+  async getAllEvents(
+    pageSize: number,
+    offset: number
+  ): Promise<{ data: Event[]; total: number; page: number; pages: number }> {
+    const allowedSizes = [10, 25, 50]
+
+    if (!Number.isFinite(pageSize) || !Number.isFinite(offset)) {
+      throw makeError('EventError', 400, 'Page size and offset are required')
+    }
+
+    if (!allowedSizes.includes(pageSize)) {
+      throw makeError('EventError', 400, 'This page size is not allowed')
+    }
+
+    const skip = Math.max(0, offset)
+
+    const [events, total] = await this.eventRepository.findAndCount({
       order: { createdAt: 'DESC' },
       relations: { author: true },
+      take: pageSize,
+      skip: skip,
     })
+
+    const page = Math.floor(skip / pageSize) + 1
+    const pages = Math.max(1, Math.ceil(total / pageSize))
+
+    return { data: events, total, page, pages }
   }
 
   async getEventById(id: number): Promise<Event> {

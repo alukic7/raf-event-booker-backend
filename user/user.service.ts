@@ -7,8 +7,26 @@ import { isValidEmail, type SafeUser } from './user.types'
 export class UserService {
   private userRepo = AppDataSource.getRepository(User)
 
-  async getAllUsers(): Promise<SafeUser[]> {
-    const users = await this.userRepo.find()
+  async getAllUsers(
+    pageSize: number,
+    offset: number
+  ): Promise<{ data: SafeUser[]; total: number; page: number; pages: number }> {
+    const allowedSizes = [10, 25, 50]
+
+    if (!Number.isFinite(pageSize) || !Number.isFinite(offset)) {
+      throw makeError('UserError', 400, 'Page size and offset are required')
+    }
+
+    if (!allowedSizes.includes(pageSize)) {
+      throw makeError('UserError', 400, 'This page size is not allowed')
+    }
+
+    const skip = Math.max(0, offset)
+
+    const [users, total] = await this.userRepo.findAndCount({
+      take: pageSize,
+      skip: skip,
+    })
     const safeUsers = []
 
     if (users) {
@@ -26,7 +44,11 @@ export class UserService {
         }
       }
     }
-    return safeUsers
+
+    const page = Math.floor(skip / pageSize) + 1
+    const pages = Math.max(1, Math.ceil(total / pageSize))
+
+    return { data: safeUsers, total, page, pages }
   }
 
   async getUserById(id: number): Promise<SafeUser> {

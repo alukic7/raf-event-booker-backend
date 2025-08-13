@@ -11,8 +11,11 @@ router.use(isAdmin)
 
 // Get all users
 router.get('/', async (req, res) => {
+  const pageSize = Number(req.query.pageSize)
+  const offset = Number(req.query.offset)
+
   try {
-    const users: SafeUser[] = await userService.getAllUsers()
+    const users = await userService.getAllUsers(pageSize, offset)
     res.status(200).json(users)
   } catch (err: unknown) {
     handleError(res, err)
