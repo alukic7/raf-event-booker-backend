@@ -61,21 +61,21 @@ export class EventService {
     tags: string[],
     maxParticipants?: number
   ): Promise<Event> {
-    const n = name?.trim(),
-      d = description?.trim(),
-      loc = location?.trim()
+    const n = name?.trim()
+    const d = description?.trim()
+    const loc = location?.trim()
+    const mp = maxParticipants == null ? null : maxParticipants
 
     if (!n || !d || !eventDate || !loc || !Array.isArray(tags)) {
       throw makeError('EventError', 400, 'Missing required fields')
     }
-    if (maxParticipants != null && maxParticipants <= 0) {
+    if (mp != null && mp <= 0) {
       throw makeError('EventError', 400, 'Max participants must be > 0')
     }
 
     const tagNames = Array.from(
       new Set(tags.map(t => t?.trim()).filter(Boolean))
     )
-
     if (tagNames.length === 0) {
       throw makeError('EventError', 400, 'At least one tag is required')
     }
@@ -103,7 +103,6 @@ export class EventService {
 
       const have = new Set(existing.map(t => t.name))
       const missing = tagNames.filter(nm => !have.has(nm))
-
       if (missing.length > 0) {
         try {
           await tagRepo
@@ -130,12 +129,11 @@ export class EventService {
         location: loc,
         category,
         author,
-        maxParticipants: maxParticipants ?? null,
+        maxParticipants: mp,
         tags: allTags,
       })
 
-      const saved = await evtRepo.save(event)
-      return saved
+      return await evtRepo.save(event)
     })
   }
 
@@ -150,21 +148,21 @@ export class EventService {
     tags: string[],
     maxParticipants?: number
   ): Promise<Event> {
-    const n = name?.trim(),
-      d = description?.trim(),
-      loc = location?.trim()
+    const n = name?.trim()
+    const d = description?.trim()
+    const loc = location?.trim()
+    const mp = maxParticipants == null ? null : maxParticipants
 
     if (!n || !d || !eventDate || !loc || !Array.isArray(tags)) {
       throw makeError('EventError', 400, 'Missing required fields')
     }
-    if (maxParticipants != null && maxParticipants <= 0) {
+    if (mp != null && mp <= 0) {
       throw makeError('EventError', 400, 'Max participants must be > 0')
     }
 
     const tagNames = Array.from(
       new Set(tags.map(t => t?.trim()).filter(Boolean))
     )
-
     if (tagNames.length === 0) {
       throw makeError('EventError', 400, 'At least one tag is required')
     }
@@ -179,7 +177,9 @@ export class EventService {
         relations: ['category', 'author', 'tags'],
       })
 
-      if (event && event.author.id !== userId) {
+      if (!event)
+        throw makeError('EventError', 404, `Event ${eventId} not found`)
+      if (event.author.id !== userId) {
         throw makeError(
           'EventError',
           403,
@@ -187,12 +187,7 @@ export class EventService {
         )
       }
 
-      if (!event)
-        throw makeError('EventError', 404, `Event ${eventId} not found`)
-
-      const [category] = await Promise.all([
-        catRepo.findOneBy({ id: categoryId }),
-      ])
+      const category = await catRepo.findOneBy({ id: categoryId })
       if (!category)
         throw makeError('EventError', 404, `Category ${categoryId} not found`)
 
@@ -203,7 +198,6 @@ export class EventService {
 
       const have = new Set(existing.map(t => t.name))
       const missing = tagNames.filter(nm => !have.has(nm))
-
       if (missing.length > 0) {
         try {
           await tagRepo
@@ -228,7 +222,7 @@ export class EventService {
       event.eventDate = eventDate
       event.location = loc
       event.category = category
-      event.maxParticipants = maxParticipants ?? null
+      event.maxParticipants = mp
       event.tags = allTags
 
       return await evtRepo.save(event)

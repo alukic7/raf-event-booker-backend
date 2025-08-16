@@ -32,13 +32,14 @@ export class UserService {
     if (users) {
       for (let i = 0; i < users.length; i++) {
         const user = users[i]
-        if (user && user.status !== 'inactive') {
+        if (user) {
           const safeUser = {
             id: user.id,
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
             type: user.type,
+            status: user.status,
           }
           safeUsers.push(safeUser)
         }
@@ -81,6 +82,11 @@ export class UserService {
     firstName: string,
     lastName: string
   ): Promise<SafeUser> {
+    email = email.trim().toLowerCase()
+    password = password.trim()
+    firstName = firstName.trim()
+    lastName = lastName.trim()
+
     if (!email || !password)
       throw makeError('AuthError', 400, 'Email and password are required')
 
@@ -94,10 +100,12 @@ export class UserService {
         'Password must be at least 8 characters'
       )
     }
+
     if (!firstName || !lastName)
       throw makeError('AuthError', 400, 'First name and last name are required')
 
     const hashedPassword = await bcrypt.hash(password, 10)
+
     const user = this.userRepo.create({
       email,
       password: hashedPassword,
@@ -115,7 +123,6 @@ export class UserService {
         type: savedUser.type,
         status: savedUser.status,
       }
-
       return safeUser
     } catch (err: any) {
       if (err.code === '23505')

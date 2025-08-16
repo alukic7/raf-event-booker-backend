@@ -6,8 +6,6 @@ import { CategoryService } from './category.service'
 const router = Router()
 const categoryService = new CategoryService()
 
-router.use(isAuthorized)
-
 // Get all categories
 router.get('/', async (req, res) => {
   const pageSize = Number(req.query.pageSize)
@@ -20,6 +18,8 @@ router.get('/', async (req, res) => {
     handleError(res, err)
   }
 })
+
+router.use(isAuthorized)
 
 // Add a new category
 router.post('/', async (req, res) => {

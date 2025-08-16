@@ -1,11 +1,14 @@
 import Router from 'express'
 import { handleError } from '../lib/http'
+import { getUserIdFromCookie } from '../lib/middlewares'
 import { SessionService } from '../session/session.service'
+import { UserService } from '../user/user.service'
 import { AuthService } from './auth.service'
 
 const router = Router()
 const authService = new AuthService()
 const sessionService = new SessionService()
+const userService = new UserService()
 
 // Log in and receive session id in cookie
 router.post('/login', async (req, res) => {
@@ -23,6 +26,23 @@ router.post('/login', async (req, res) => {
   }
 })
 
+// Return user data by session id from cookie
+router.get('/me', async (req, res) => {
+  try {
+    const userId = await getUserIdFromCookie(req)
+    const user = await userService.getUserById(userId)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    res.status(200).json(user)
+  } catch (error: unknown) {
+    handleError(res, error)
+  }
+})
+
+// Log out
 router.put('/logout', async (req, res) => {
   try {
     const sessionId = req.cookies.sessionId

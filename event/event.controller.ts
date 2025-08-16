@@ -7,15 +7,13 @@ import { EventService } from './event.service'
 const router = Router()
 const eventService = new EventService()
 
-router.use(isAuthorized)
-
 // Get all events
 router.get('/', async (req, res) => {
   const pageSize = Number(req.query.pageSize)
   const offset = Number(req.query.offset)
 
   try {
-    const events: Event[] = await eventService.getAllEvents(pageSize, offset)
+    const events = await eventService.getAllEvents(pageSize, offset)
     res.status(200).json(events)
   } catch (err: unknown) {
     handleError(res, err)
@@ -32,6 +30,8 @@ router.get('/:id', async (req, res) => {
     handleError(res, err)
   }
 })
+
+router.use(isAuthorized)
 
 // Create a new event
 router.post('/', async (req, res) => {

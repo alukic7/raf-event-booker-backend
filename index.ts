@@ -17,7 +17,7 @@ app.use(
     origin: 'http://localhost:5173', // Set frontend domain here
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'Cookie', 'Authorization'],
   })
 )
 

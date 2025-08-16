@@ -3,11 +3,13 @@ import { AppDataSource } from '../config/data-source'
 import { makeError } from '../lib/errors'
 import { Session } from '../session/session.entity'
 import { User } from '../user/user.entity'
+import { UserService } from '../user/user.service'
 import { isValidEmail } from '../user/user.types'
 
 export class AuthService {
   private userRepo = AppDataSource.getRepository(User)
   private sessionRepo = AppDataSource.getRepository(Session)
+  private userService = new UserService()
 
   async login(email: string, password: string): Promise<string> {
     if (!email || !password)

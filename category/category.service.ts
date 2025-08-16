@@ -89,14 +89,20 @@ export class CategoryService {
   }
 
   async deleteCategory(id: number) {
-    if (id == null) {
+    if (!Number.isFinite(id)) {
       throw makeError('CategoryError', 400, 'Category id is required')
     }
 
-    let result
-
     try {
-      const result = await this.categoryRepository.delete(id)
+      const result = await this.categoryRepository.delete({ id })
+
+      if ((result.affected ?? 0) === 0) {
+        throw makeError(
+          'CategoryError',
+          404,
+          `Category with id ${id} not found`
+        )
+      }
     } catch (err: any) {
       if (err?.code === '23503') {
         throw makeError(
@@ -106,10 +112,6 @@ export class CategoryService {
         )
       }
       throw makeError('CategoryError', 500, 'Failed to delete category')
-    }
-
-    if (result!.affected === 0) {
-      throw makeError('CategoryError', 404, `Category with id ${id} not found`)
     }
   }
 }
