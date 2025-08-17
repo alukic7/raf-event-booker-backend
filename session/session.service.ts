@@ -25,6 +25,7 @@ export class SessionService {
 
   async getOrCreateSessionId(req: Request, res: Response): Promise<string> {
     const sessionId = req.cookies?.sessionId
+
     if (sessionId) {
       const existing = await this.sessionRepository.findOne({
         where: { id: sessionId },

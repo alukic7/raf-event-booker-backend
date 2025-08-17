@@ -17,8 +17,24 @@ export async function getUserIdFromCookie(req: Request) {
 
   if (!session) throw makeError('AuthError', 401, 'Invalid session')
 
-  if (!session.user)
-    throw makeError('AuthError', 401, 'Guests not allowed here')
+  if (!session.user) throw makeError('AuthError', 401, 'Guests not allowed')
+
+  return session.user.id
+}
+
+export async function getUserIdOrGuest(req: Request): Promise<number | null> {
+  const sessionRepo = AppDataSource.getRepository(Session)
+
+  const sessionId = req.cookies.sessionId
+  if (!sessionId) return null
+
+  const session = await sessionRepo.findOne({
+    where: { id: sessionId, isValid: true },
+    relations: { user: true },
+  })
+
+  if (!session) return null
+  if (!session.user) return null
 
   return session.user.id
 }

@@ -1,6 +1,10 @@
 import { Router } from 'express'
 import { handleError } from '../lib/http'
-import { getUserIdFromCookie, isAuthorized } from '../lib/middlewares'
+import {
+  getUserIdFromCookie,
+  getUserIdOrGuest,
+  isAuthorized,
+} from '../lib/middlewares'
 import { SessionService } from '../session/session.service'
 import { Event } from './event.entity'
 import { EventService } from './event.service'
@@ -62,6 +66,25 @@ router.get('/:id', async (req, res) => {
   }
 })
 
+// Mark event viewed by user
+router.put('/viewed/:id', async (req, res) => {
+  const eventId = Number(req.params.id)
+  try {
+    const userId = await getUserIdOrGuest(req)
+    const sessionId = req.cookies?.sessionId
+
+    const updatedEvent = await eventService.increaseViewCount(
+      eventId,
+      userId,
+      sessionId
+    )
+
+    res.status(200).json({ viewCount: updatedEvent.views })
+  } catch (err) {
+    handleError(res, err)
+  }
+})
+
 router.use(isAuthorized)
 
 // Create a new event
@@ -82,7 +105,7 @@ router.post('/', async (req, res) => {
       eventDate,
       location,
       categoryId,
-      authorId,
+      authorId!,
       tags,
       maxParticipants
     )
@@ -107,7 +130,7 @@ router.put('/:id', async (req, res) => {
 
   try {
     const updatedEvent = await eventService.updateEvent(
-      userId,
+      userId!,
       id,
       name,
       description,
@@ -128,7 +151,7 @@ router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id)
   const userId = await getUserIdFromCookie(req)
   try {
-    await eventService.deleteEvent(id, userId)
+    await eventService.deleteEvent(id, userId!)
     res.status(204).send()
   } catch (err: unknown) {
     handleError(res, err)

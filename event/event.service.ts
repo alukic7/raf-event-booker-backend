@@ -1,12 +1,16 @@
 import { Category } from '../category/category.entity'
 import { AppDataSource } from '../config/data-source'
 import { makeError } from '../lib/errors'
+import { Session } from '../session/session.entity'
 import { Tag } from '../tag/tag.entity'
 import { User } from '../user/user.entity'
 import { Event } from './event.entity'
+import { EventView } from './eventView.entity'
 
 export class EventService {
-  eventRepository = AppDataSource.getRepository(Event)
+  private eventRepository = AppDataSource.getRepository(Event)
+  private viewRepository = AppDataSource.getRepository(EventView)
+  private sessionRepository = AppDataSource.getRepository(Session)
 
   async getAllEvents(
     pageSize: number,
@@ -93,6 +97,37 @@ export class EventService {
       throw makeError('EventError', 404, `Event with id ${id} not found`)
 
     return event
+  }
+
+  async increaseViewCount(
+    eventId: number,
+    userId: number | null,
+    sessionId: string | null
+  ) {
+    return await AppDataSource.transaction(async manager => {
+      const event = await manager.findOne(Event, { where: { id: eventId } })
+      if (!event) throw makeError('EventError', 404, 'Event not found')
+
+      const existing = await manager.findOne(EventView, {
+        where: [
+          userId
+            ? { event: { id: eventId }, user: { id: userId } }
+            : { event: { id: eventId }, session: { id: sessionId! } },
+        ],
+      })
+
+      if (existing) return event
+
+      const view = manager.create(EventView, {
+        event,
+        user: userId ? ({ id: userId } as User) : null,
+        session: !userId && sessionId ? ({ id: sessionId } as Session) : null,
+      })
+      await manager.save(EventView, view)
+
+      event.views += 1
+      return await manager.save(Event, event)
+    })
   }
 
   async createEvent(

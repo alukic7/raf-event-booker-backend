@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm'
 import { Category } from '../category/category.entity'
 import { Comment } from '../comment/comment.entity'
 import { Event } from '../event/event.entity'
+import { EventView } from '../event/eventView.entity'
 import { Session } from '../session/session.entity'
 import { Tag } from '../tag/tag.entity'
 import { User } from '../user/user.entity'
@@ -17,5 +18,5 @@ export const AppDataSource = new DataSource({
   database: process.env.POSTGRES_DB,
   synchronize: true,
   logging: false,
-  entities: [User, Session, Category, Event, Comment, Tag], // Add entity classes here
+  entities: [User, Session, Category, Event, Comment, Tag, EventView], // Add entity classes here
 })
