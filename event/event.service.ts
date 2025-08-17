@@ -37,6 +37,50 @@ export class EventService {
     return { data: events, total, page, pages }
   }
 
+  async getTheMostViewed(): Promise<Event[]> {
+    const events = await this.eventRepository.find({
+      order: { views: 'DESC' },
+      take: 10,
+      skip: 0,
+    })
+
+    if (!events) makeError('EventError', 404, 'There are no events yet')
+
+    return events
+  }
+
+  async getEventsByCategory(
+    categoryId: number,
+    pageSize: number,
+    offset: number
+  ): Promise<{ data: Event[]; total: number; page: number; pages: number }> {
+    const allowedSizes = [10, 25, 50]
+
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+      throw makeError('EventError', 400, 'Valid category id is required')
+    }
+    if (!Number.isFinite(pageSize) || !Number.isFinite(offset)) {
+      throw makeError('EventError', 400, 'Page size and offset are required')
+    }
+    if (!allowedSizes.includes(pageSize)) {
+      throw makeError('EventError', 400, 'This page size is not allowed')
+    }
+
+    const skip = Math.max(0, offset)
+
+    const [events, total] = await this.eventRepository.findAndCount({
+      where: { category: { id: categoryId } },
+      order: { createdAt: 'DESC' },
+      relations: { author: true, category: true },
+      take: pageSize,
+      skip,
+    })
+
+    const page = Math.floor(skip / pageSize) + 1
+    const pages = Math.max(1, Math.ceil(total / pageSize))
+    return { data: events, total, page, pages }
+  }
+
   async getEventById(id: number): Promise<Event> {
     if (!id) throw makeError('EventError', 400, 'Event id is required')
 

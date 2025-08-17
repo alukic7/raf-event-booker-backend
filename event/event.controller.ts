@@ -20,6 +20,34 @@ router.get('/', async (req, res) => {
   }
 })
 
+// Get 10 most viewed events
+router.get('/most-viewed', async (req, res) => {
+  try {
+    const events = await eventService.getTheMostViewed()
+    res.status(200).json(events)
+  } catch (err: unknown) {
+    handleError(res, err)
+  }
+})
+
+// Get events by category
+router.get('/category/:id', async (req, res) => {
+  const pageSize = Number(req.query.pageSize)
+  const offset = Number(req.query.offset)
+  const categoryId = Number(req.params.id)
+
+  try {
+    const events = await eventService.getEventsByCategory(
+      categoryId,
+      pageSize,
+      offset
+    )
+    res.status(200).json(events)
+  } catch (err: unknown) {
+    handleError(res, err)
+  }
+})
+
 // Get event by id
 router.get('/:id', async (req, res) => {
   const id = Number(req.params.id)
