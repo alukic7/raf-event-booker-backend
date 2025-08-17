@@ -1,11 +1,13 @@
 import { Router } from 'express'
 import { handleError } from '../lib/http'
 import { getUserIdFromCookie, isAuthorized } from '../lib/middlewares'
+import { SessionService } from '../session/session.service'
 import { Event } from './event.entity'
 import { EventService } from './event.service'
 
 const router = Router()
 const eventService = new EventService()
+const sessionService = new SessionService()
 
 // Get all events
 router.get('/', async (req, res) => {
@@ -13,6 +15,7 @@ router.get('/', async (req, res) => {
   const offset = Number(req.query.offset)
 
   try {
+    await sessionService.getOrCreateSessionId(req, res)
     const events = await eventService.getAllEvents(pageSize, offset)
     res.status(200).json(events)
   } catch (err: unknown) {

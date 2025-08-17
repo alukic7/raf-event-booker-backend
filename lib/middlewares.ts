@@ -11,10 +11,14 @@ export async function getUserIdFromCookie(req: Request) {
   if (!sessionId) throw makeError('AuthError', 401, 'Unauthorized access')
 
   const session = await sessionRepo.findOne({
-    where: { id: sessionId },
+    where: { id: sessionId, isValid: true },
     relations: { user: true },
   })
+
   if (!session) throw makeError('AuthError', 401, 'Invalid session')
+
+  if (!session.user)
+    throw makeError('AuthError', 401, 'Guests not allowed here')
 
   return session.user.id
 }
@@ -24,21 +28,18 @@ export async function isAdmin(req: Request, res: Response, next: NextFunction) {
     const sessionId = req.cookies.sessionId
     if (!sessionId) throw makeError('AuthError', 401, 'Unauthorized access')
 
-    const sessionRepo = AppDataSource.getRepository('Session')
+    const sessionRepo = AppDataSource.getRepository(Session)
     const session = await sessionRepo.findOne({
-      where: { id: sessionId },
+      where: { id: sessionId, isValid: true },
       relations: ['user'],
     })
 
     if (!session) throw makeError('AuthError', 401, 'Invalid session')
 
-    if (!session.user) throw makeError('AuthError', 403, 'Invalid session')
+    if (!session.user) throw makeError('AuthError', 403, 'Guests not allowed')
 
     if (session.user.type !== 'admin')
       throw makeError('AuthError', 403, 'Access denied. You are not admin.')
-
-    if (session.isValid === false)
-      throw makeError('AuthError', 403, 'Session is no longer valid')
 
     next()
   } catch (err: unknown) {
@@ -53,21 +54,17 @@ export async function isAuthorized(
 ) {
   try {
     const sessionId = req.cookies.sessionId
-
     if (!sessionId) throw makeError('AuthError', 401, 'Unauthorized access')
 
-    const sessionRepo = AppDataSource.getRepository('Session')
+    const sessionRepo = AppDataSource.getRepository(Session)
     const session = await sessionRepo.findOne({
-      where: { id: sessionId },
+      where: { id: sessionId, isValid: true },
       relations: ['user'],
     })
 
     if (!session) throw makeError('AuthError', 401, 'Invalid session')
 
-    if (!session.user) throw makeError('AuthError', 403, 'Invalid session')
-
-    if (session.isValid === false)
-      throw makeError('AuthError', 403, 'Session is no longer valid')
+    if (!session.user) throw makeError('AuthError', 403, 'Guests not allowed')
 
     next()
   } catch (err: unknown) {

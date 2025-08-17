@@ -59,4 +59,26 @@ router.post('/:eventId', async (req, res) => {
   }
 })
 
+// Like a comment
+router.put('/like/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    await commentsService.likeComment(id)
+    res.status(201).json({ message: 'Liked successfully' })
+  } catch (error) {
+    handleError(res, error)
+  }
+})
+
+// Dislike a comment
+router.put('/dislike/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    await commentsService.dislikeComment(id)
+    res.status(201).json({ message: 'Disliked successfully' })
+  } catch (error) {
+    handleError(res, error)
+  }
+})
+
 export { router as commentsRouter }

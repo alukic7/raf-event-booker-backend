@@ -15,9 +15,9 @@ export class Session {
   id: string
 
   @Index('idx_sessions_user_id')
-  @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: false })
+  @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'user_id' })
-  user: User
+  user: User | null
 
   @CreateDateColumn({
     name: 'created_at',

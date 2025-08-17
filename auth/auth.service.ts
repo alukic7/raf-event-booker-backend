@@ -11,7 +11,11 @@ export class AuthService {
   private sessionRepo = AppDataSource.getRepository(Session)
   private userService = new UserService()
 
-  async login(email: string, password: string): Promise<string> {
+  async login(
+    email: string,
+    password: string,
+    guestSessionId: string
+  ): Promise<string> {
     if (!email || !password)
       throw makeError('AuthError', 400, 'Email and password are required')
 
@@ -29,6 +33,10 @@ export class AuthService {
     const isValidPassword = await bcrypt.compare(password, user.password)
 
     if (!isValidPassword) throw makeError('AuthError', 401, 'Invalid password')
+
+    if (guestSessionId) {
+      await this.sessionRepo.update({ id: guestSessionId }, { isValid: false })
+    }
 
     const session = this.sessionRepo.create({ user })
     const savedSession = await this.sessionRepo.save(session)

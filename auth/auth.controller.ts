@@ -14,13 +14,16 @@ const userService = new UserService()
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    const sessionId = await authService.login(email, password)
+    const guestSessionId = req.cookies?.sessionId
+
+    const sessionId = await authService.login(email, password, guestSessionId)
+
     res
       .status(200)
       .cookie('sessionId', sessionId, {
         httpOnly: true,
       })
-      .json({ message: 'Login successfull' })
+      .json({ message: 'Login successful' })
   } catch (err) {
     handleError(res, err)
   }

@@ -70,4 +70,30 @@ export class CommentsService {
 
     return newComment
   }
+
+  async likeComment(id: number) {
+    await AppDataSource.transaction(async m => {
+      const comment = await m.getRepository(Comment).findOne({
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      })
+      if (!comment) throw makeError('CommentError', 404, 'Comment not found')
+
+      comment.likeCount += 1
+      await m.getRepository(Comment).save(comment)
+    })
+  }
+
+  async dislikeComment(id: number) {
+    await AppDataSource.transaction(async m => {
+      const comment = await m.getRepository(Comment).findOne({
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      })
+      if (!comment) throw makeError('CommentError', 404, 'Comment not found')
+
+      comment.dislikeCount += 1
+      await m.getRepository(Comment).save(comment)
+    })
+  }
 }
