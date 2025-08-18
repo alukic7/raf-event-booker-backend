@@ -26,7 +26,6 @@ export async function getUserIdOrGuest(req: Request): Promise<number | null> {
   const sessionRepo = AppDataSource.getRepository(Session)
 
   const sessionId = req.cookies.sessionId
-  if (!sessionId) return null
 
   const session = await sessionRepo.findOne({
     where: { id: sessionId, isValid: true },
@@ -37,6 +36,26 @@ export async function getUserIdOrGuest(req: Request): Promise<number | null> {
   if (!session.user) return null
 
   return session.user.id
+}
+
+export async function getIdentity(
+  req: Request
+): Promise<{ userId: number | null; sessionId: string | null }> {
+  const sessionId = req.cookies?.sessionId ?? null
+  if (!sessionId) return { userId: null, sessionId: null }
+
+  const sessionRepo = AppDataSource.getRepository(Session)
+  const session = await sessionRepo.findOne({
+    where: { id: sessionId, isValid: true },
+    relations: { user: true },
+  })
+
+  if (!session) return { userId: null, sessionId: null }
+
+  return {
+    userId: session.user ? session.user.id : null,
+    sessionId: session.id,
+  }
 }
 
 export async function isAdmin(req: Request, res: Response, next: NextFunction) {

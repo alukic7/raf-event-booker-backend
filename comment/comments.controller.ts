@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { handleError } from '../lib/http'
-import { getUserIdFromCookie } from '../lib/middlewares'
+import { getIdentity, getUserIdFromCookie } from '../lib/middlewares'
 import { UserService } from '../user/user.service'
 import { CommentsService } from './comments.service'
 
@@ -59,23 +59,21 @@ router.post('/:eventId', async (req, res) => {
   }
 })
 
-// Like a comment
-router.put('/like/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id)
-    await commentsService.likeComment(id)
-    res.status(201).json({ message: 'Liked successfully' })
-  } catch (error) {
-    handleError(res, error)
-  }
-})
+// React to a comment
+router.put('/react/:id', async (req, res) => {
+  const commentId = Number(req.params.id)
+  const reactionType = req.body.reactionType
 
-// Dislike a comment
-router.put('/dislike/:id', async (req, res) => {
+  const { userId, sessionId } = await getIdentity(req)
+
   try {
-    const id = Number(req.params.id)
-    await commentsService.dislikeComment(id)
-    res.status(201).json({ message: 'Disliked successfully' })
+    await commentsService.reactOnComment(
+      commentId,
+      userId,
+      sessionId!,
+      reactionType
+    )
+    res.status(201).json({ message: `Successfully added a ${reactionType}` })
   } catch (error) {
     handleError(res, error)
   }

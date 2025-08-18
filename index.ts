@@ -7,6 +7,7 @@ import { commentsRouter } from './comment/comments.controller'
 import { AppDataSource } from './config/data-source'
 import { eventRouter } from './event/event.controller'
 import { createAdmin } from './lib/init'
+import { rsvpRouter } from './rsvp/rsvp.controller'
 import { userRouter } from './user/user.controller'
 
 const app = express()
@@ -30,6 +31,7 @@ app.use('/users', userRouter)
 app.use('/categories', categoryRouter)
 app.use('/events/comments', commentsRouter)
 app.use('/events', eventRouter)
+app.use('/rsvp', rsvpRouter)
 
 AppDataSource.initialize()
   .then(async () => {

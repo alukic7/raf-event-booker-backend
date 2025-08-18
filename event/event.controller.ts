@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { handleError } from '../lib/http'
 import {
+  getIdentity,
   getUserIdFromCookie,
   getUserIdOrGuest,
   isAuthorized,
@@ -82,6 +83,20 @@ router.put('/viewed/:id', async (req, res) => {
     res.status(200).json({ viewCount: updatedEvent.views })
   } catch (err) {
     handleError(res, err)
+  }
+})
+
+router.put('/react/:id', async (req, res) => {
+  const eventId = Number(req.params.id)
+  const reactionType = req.body.reactionType
+
+  const { userId, sessionId } = await getIdentity(req)
+
+  try {
+    await eventService.reactOnEvent(eventId, userId, sessionId!, reactionType)
+    res.status(201).json({ message: `Successfully added a ${reactionType}` })
+  } catch (error) {
+    handleError(res, error)
   }
 })
 

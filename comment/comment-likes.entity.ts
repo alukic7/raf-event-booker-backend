@@ -1,23 +1,26 @@
 import {
+  Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm'
-import { Event } from '../event/event.entity'
 import { Session } from '../session/session.entity'
 import { User } from '../user/user.entity'
+import { Comment } from './comment.entity'
 
-@Entity('event_views')
-@Unique(['event', 'user'])
-@Unique(['event', 'session'])
-export class EventView {
+export type ReactionType = 'like' | 'dislike'
+
+@Entity('comment_likes')
+@Unique(['comment', 'user'])
+@Unique(['comment', 'session'])
+export class CommentLikes {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ManyToOne(() => Event, event => event.views)
-  event: Event
+  @ManyToOne(() => Comment, { nullable: false })
+  comment: Comment
 
   @ManyToOne(() => User, { nullable: true })
   user: User | null
@@ -25,6 +28,9 @@ export class EventView {
   @ManyToOne(() => Session, { nullable: true })
   session: Session | null
 
+  @Column({ type: 'varchar', length: 10, nullable: false })
+  type: ReactionType
+
   @CreateDateColumn()
-  viewedAt: Date
+  createdAt: Date
 }

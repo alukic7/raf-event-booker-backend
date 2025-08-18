@@ -62,6 +62,12 @@ export class Event {
   @JoinColumn({ name: 'category_id' })
   category: Category
 
+  @Column({ nullable: false, type: 'int', default: 0 })
+  likeCount: number
+
+  @Column({ nullable: false, type: 'int', default: 0 })
+  dislikeCount: number
+
   @Column({ type: 'int', nullable: true, name: 'max_participants' })
   maxParticipants: number | null
 }

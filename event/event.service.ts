@@ -1,11 +1,13 @@
 import { Category } from '../category/category.entity'
+import type { ReactionType } from '../comment/comment-likes.entity'
 import { AppDataSource } from '../config/data-source'
 import { makeError } from '../lib/errors'
 import { Session } from '../session/session.entity'
 import { Tag } from '../tag/tag.entity'
 import { User } from '../user/user.entity'
+import { EventLikes } from './event-likes.entity'
+import { EventView } from './event-view.entity'
 import { Event } from './event.entity'
-import { EventView } from './eventView.entity'
 
 export class EventService {
   private eventRepository = AppDataSource.getRepository(Event)
@@ -102,19 +104,24 @@ export class EventService {
   async increaseViewCount(
     eventId: number,
     userId: number | null,
-    sessionId: string | null
+    sessionId: string
   ) {
-    return await AppDataSource.transaction(async manager => {
+    return await AppDataSource.transaction('REPEATABLE READ', async manager => {
       const event = await manager.findOne(Event, { where: { id: eventId } })
       if (!event) throw makeError('EventError', 404, 'Event not found')
 
-      const existing = await manager.findOne(EventView, {
-        where: [
-          userId
-            ? { event: { id: eventId }, user: { id: userId } }
-            : { event: { id: eventId }, session: { id: sessionId! } },
-        ],
-      })
+      const existing = await manager
+        .getRepository(EventView)
+        .createQueryBuilder('view')
+        .where('view.eventId = :eventId', { eventId })
+        .andWhere(
+          userId ? 'view.userId = :userId' : 'view.sessionId = :sessionId',
+          {
+            userId,
+            sessionId,
+          }
+        )
+        .getOne()
 
       if (existing) return event
 
@@ -127,6 +134,59 @@ export class EventService {
 
       event.views += 1
       return await manager.save(Event, event)
+    })
+  }
+
+  async reactOnEvent(
+    eventId: number,
+    userId: number | null,
+    sessionId: string,
+    reactionType: string
+  ) {
+    if (!userId && !sessionId)
+      throw makeError('CommentError', 400, 'Missing user or session identity')
+
+    if (!reactionType)
+      throw makeError('CommentError', 400, 'Missing reaction type')
+
+    if (reactionType !== 'like' && reactionType !== 'dislike') {
+      throw makeError('CommentError', 400, 'Invalid reaction type')
+    }
+
+    if (!eventId) throw makeError('CommentError', 400, 'Missing comment id')
+
+    await AppDataSource.transaction(async manager => {
+      const eventRepo = manager.getRepository(Event)
+      const eventLikesRepo = manager.getRepository(EventLikes)
+
+      const exists = await eventRepo.exist({ where: { id: eventId } })
+      if (!exists) throw makeError('CommentError', 404, 'Comment not found')
+
+      const identity = userId
+        ? { user: { id: userId } }
+        : { session: { id: sessionId! } }
+
+      const existing = await eventLikesRepo.findOne({
+        where: { event: { id: eventId }, ...identity },
+      })
+
+      if (existing) {
+        if (existing.type === reactionType) return
+
+        await eventLikesRepo.delete({ id: existing.id })
+
+        const opposite = existing.type === 'like' ? 'likeCount' : 'dislikeCount'
+        await eventRepo.decrement({ id: eventId }, opposite, 1)
+      }
+
+      await eventLikesRepo.insert({
+        event: { id: eventId } as any,
+        ...identity,
+        type: reactionType as ReactionType,
+      })
+
+      const target = reactionType === 'like' ? 'likeCount' : 'dislikeCount'
+      await eventRepo.increment({ id: eventId }, target, 1)
     })
   }
 

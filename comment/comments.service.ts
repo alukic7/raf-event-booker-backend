@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/data-source'
 import { Event } from '../event/event.entity'
 import { makeError } from '../lib/errors'
+import { CommentLikes, type ReactionType } from './comment-likes.entity'
 import { Comment } from './comment.entity'
 
 export class CommentsService {
@@ -71,29 +72,56 @@ export class CommentsService {
     return newComment
   }
 
-  async likeComment(id: number) {
-    await AppDataSource.transaction(async m => {
-      const comment = await m.getRepository(Comment).findOne({
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
+  async reactOnComment(
+    commentId: number,
+    userId: number | null,
+    sessionId: string,
+    reactionType: string
+  ) {
+    if (!userId && !sessionId)
+      throw makeError('CommentError', 400, 'Missing user or session identity')
+
+    if (!reactionType)
+      throw makeError('CommentError', 400, 'Missing reaction type')
+
+    if (reactionType !== 'like' && reactionType !== 'dislike') {
+      throw makeError('CommentError', 400, 'Invalid reaction type')
+    }
+
+    if (!commentId) throw makeError('CommentError', 400, 'Missing comment id')
+
+    await AppDataSource.transaction(async manager => {
+      const commentRepo = manager.getRepository(Comment)
+      const commentLikesRepo = manager.getRepository(CommentLikes)
+
+      const exists = await commentRepo.exist({ where: { id: commentId } })
+      if (!exists) throw makeError('CommentError', 404, 'Comment not found')
+
+      const identity = userId
+        ? { user: { id: userId } }
+        : { session: { id: sessionId! } }
+
+      const existing = await commentLikesRepo.findOne({
+        where: { comment: { id: commentId }, ...identity },
       })
-      if (!comment) throw makeError('CommentError', 404, 'Comment not found')
 
-      comment.likeCount += 1
-      await m.getRepository(Comment).save(comment)
-    })
-  }
+      if (existing) {
+        if (existing.type === reactionType) return
 
-  async dislikeComment(id: number) {
-    await AppDataSource.transaction(async m => {
-      const comment = await m.getRepository(Comment).findOne({
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
+        await commentLikesRepo.delete({ id: existing.id })
+
+        const opposite = existing.type === 'like' ? 'likeCount' : 'dislikeCount'
+        await commentRepo.decrement({ id: commentId }, opposite, 1)
+      }
+
+      await commentLikesRepo.insert({
+        comment: { id: commentId } as any,
+        ...identity,
+        type: reactionType as ReactionType,
       })
-      if (!comment) throw makeError('CommentError', 404, 'Comment not found')
 
-      comment.dislikeCount += 1
-      await m.getRepository(Comment).save(comment)
+      const target = reactionType === 'like' ? 'likeCount' : 'dislikeCount'
+      await commentRepo.increment({ id: commentId }, target, 1)
     })
   }
 }
