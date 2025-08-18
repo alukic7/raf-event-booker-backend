@@ -1,6 +1,4 @@
 import {
-  BeforeInsert,
-  BeforeUpdate,
   Check,
   Column,
   CreateDateColumn,
@@ -43,13 +41,4 @@ export class Rsvp {
 
   @CreateDateColumn({ name: 'rsvp_date', type: 'timestamptz', nullable: false })
   rsvpDate: Date
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  normalizeEmail() {
-    if (this.email != null) {
-      const trimmed = this.email.trim()
-      this.email = trimmed ? trimmed.toLowerCase() : null
-    }
-  }
 }

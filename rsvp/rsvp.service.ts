@@ -4,6 +4,7 @@ import { Event } from '../event/event.entity'
 import { makeError } from '../lib/errors'
 import { Session } from '../session/session.entity'
 import { User } from '../user/user.entity'
+import { isValidEmail } from '../user/user.types'
 import { Rsvp } from './rsvp.entity'
 
 export class RsvpService {
@@ -44,6 +45,8 @@ export class RsvpService {
         if (!guestEmail) {
           throw makeError('RsvpError', 400, 'Guest email required')
         }
+        if (!isValidEmail(guestEmail))
+          throw makeError('RsvpError', 400, 'Invalid email format')
       }
 
       const event = await eventRepo
@@ -58,7 +61,7 @@ export class RsvpService {
       const existing = await rsvpRepo.findOne({
         where: user
           ? { event: { id: eventId }, user: { id: user.id } }
-          : { event: { id: eventId }, email: guestEmail!.toLowerCase() },
+          : { event: { id: eventId }, email: guestEmail! },
       })
       if (existing) {
         throw makeError('RsvpError', 409, 'Already registered for this event')
