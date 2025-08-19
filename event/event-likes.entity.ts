@@ -18,10 +18,10 @@ export class EventLikes {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ManyToOne(() => Event, { nullable: false })
+  @ManyToOne(() => Event, { nullable: false, onDelete: 'CASCADE' })
   event: Event
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   user: User | null
 
   @ManyToOne(() => Session, { nullable: true })

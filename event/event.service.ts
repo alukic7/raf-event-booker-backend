@@ -11,8 +11,6 @@ import { Event } from './event.entity'
 
 export class EventService {
   private eventRepository = AppDataSource.getRepository(Event)
-  private viewRepository = AppDataSource.getRepository(EventView)
-  private sessionRepository = AppDataSource.getRepository(Session)
 
   async getAllEvents(
     pageSize: number,
@@ -53,6 +51,25 @@ export class EventService {
     if (!events) makeError('EventError', 404, 'There are no events yet')
 
     return events
+  }
+
+  async getTheMostReactedTo(): Promise<
+    { id: number; name: string; reactionSum: number }[]
+  > {
+    const results = await this.eventRepository
+      .createQueryBuilder('event')
+      .select('event.id', 'id')
+      .addSelect('event.name', 'name')
+      .addSelect('"event"."likeCount" + "event"."dislikeCount"', 'reactionSum')
+      .orderBy('"reactionSum"', 'DESC')
+      .limit(3)
+      .getRawMany()
+
+    return results.map(r => ({
+      id: Number(r.id),
+      name: r.name,
+      reactionSum: Number(r.reactionSum),
+    }))
   }
 
   async getEventsByCategory(

@@ -38,6 +38,16 @@ router.get('/most-viewed', async (req, res) => {
   }
 })
 
+// Get 3 events with the most reactions
+router.get('/most-reactions', async (req, res) => {
+  try {
+    const events = await eventService.getTheMostReactedTo()
+    res.status(200).json(events)
+  } catch (err: unknown) {
+    handleError(res, err)
+  }
+})
+
 // Get events by category
 router.get('/category/:id', async (req, res) => {
   const pageSize = Number(req.query.pageSize)
