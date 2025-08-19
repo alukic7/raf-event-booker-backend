@@ -1,4 +1,3 @@
-// rsvp.service.ts
 import { AppDataSource } from '../config/data-source'
 import { Event } from '../event/event.entity'
 import { makeError } from '../lib/errors'

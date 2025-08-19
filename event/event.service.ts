@@ -104,6 +104,44 @@ export class EventService {
     return { data: events, total, page, pages }
   }
 
+  async getEventsByTag(
+    tagId: number,
+    pageSize: number,
+    offset: number
+  ): Promise<{ data: Event[]; total: number; page: number; pages: number }> {
+    const allowedSizes = [10, 25, 50]
+
+    if (!Number.isInteger(tagId) || tagId <= 0) {
+      throw makeError('EventError', 400, 'Valid tag id is required')
+    }
+    if (!Number.isFinite(pageSize) || !Number.isFinite(offset)) {
+      throw makeError('EventError', 400, 'Page size and offset are required')
+    }
+    if (!allowedSizes.includes(pageSize)) {
+      throw makeError('EventError', 400, 'This page size is not allowed')
+    }
+
+    const skip = Math.max(0, offset)
+
+    const qb = this.eventRepository
+      .createQueryBuilder('event')
+      .innerJoin('event.tags', 'tag', 'tag.id = :tagId', { tagId })
+      .leftJoinAndSelect('event.author', 'author')
+      .leftJoinAndSelect('event.category', 'category')
+      .orderBy('event.createdAt', 'DESC')
+      .take(pageSize)
+      .skip(skip)
+
+    const [events, total] = await qb.getManyAndCount()
+
+    return {
+      data: events,
+      total: total,
+      page: Math.floor(skip / pageSize) + 1,
+      pages: Math.ceil(total / pageSize),
+    }
+  }
+
   async getEventById(id: number): Promise<Event> {
     if (!id) throw makeError('EventError', 400, 'Event id is required')
 

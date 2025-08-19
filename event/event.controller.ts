@@ -66,6 +66,20 @@ router.get('/category/:id', async (req, res) => {
   }
 })
 
+// Get events by tag
+router.get('/tag/:id', async (req, res) => {
+  const pageSize = Number(req.query.pageSize)
+  const offset = Number(req.query.offset)
+  const tagId = Number(req.params.id)
+
+  try {
+    const events = await eventService.getEventsByTag(tagId, pageSize, offset)
+    res.status(200).json(events)
+  } catch (err: unknown) {
+    handleError(res, err)
+  }
+})
+
 // Get event by id
 router.get('/:id', async (req, res) => {
   const id = Number(req.params.id)
