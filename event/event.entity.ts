@@ -16,6 +16,7 @@ import { User } from '../user/user.entity'
 
 @Check(`"max_participants" IS NULL OR "max_participants" > 0`)
 @Check(`"views" >= 0`)
+@Check(`"like_count" >= 0 AND "dislike_count" >= 0`)
 @Entity('events')
 export class Event {
   @PrimaryGeneratedColumn()
