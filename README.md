@@ -3,5 +3,5 @@
 ## Startup 🚀
 
 ```
-bun install && docker compose up -d && bun run dev
+bun install && docker compose up -d && bun run start
 ```
